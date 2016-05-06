@@ -8,9 +8,10 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.Toast;
 
+import com.charry.krefreshlayout.widget.KRefreshHeadView;
 import com.charry.krefreshlayout.widget.KRefreshLayout;
-import com.charry.krefreshlayout.widget.RefreshNormalHead;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,8 +30,6 @@ public class MainActivity extends AppCompatActivity implements KRefreshLayout.KO
 
         mRefreshLayout = (KRefreshLayout) findViewById(R.id.refreshlayout);
         mRefreshLayout.setOnRefreshListener(this);
-        mRefreshLayout.setCustomHeadView(new RefreshNormalHead(this));
-        mRefreshLayout.setHeadViewHeight((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 70, getResources().getDisplayMetrics()));
         mListView = (ListView) findViewById(R.id.listview);
 
         List<String> datas = new ArrayList<>();
@@ -54,13 +53,32 @@ public class MainActivity extends AppCompatActivity implements KRefreshLayout.KO
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.m_item_1:
+            case R.id.m_item_1:// 自动刷新
                 mRefreshLayout.startRefreshWithCallBack();
                 break;
 
-            case R.id.m_item_2:
+            case R.id.m_item_2:// 默认覆盖模式 可切换为跟随模式
                 mRefreshLayout.setOverlay(!mRefreshLayout.isOverlay());
                 item.setTitle(mRefreshLayout.isOverlay() ? "Follow Model" : "Overlay Model");
+                mRefreshLayout.startRefreshWithCallBack();
+                Toast.makeText(MainActivity.this, mRefreshLayout.isOverlay() ? "Overlay Model" : "Follow Model", Toast.LENGTH_SHORT).show();
+                break;
+
+            case R.id.m_item_3:// 是否启用下拉刷新功能
+                mRefreshLayout.setEnablePullRefresh(!mRefreshLayout.isEnablePullRefresh());
+                item.setTitle(mRefreshLayout.isEnablePullRefresh() ? "PullRefresh Disabled" : "PullRefresh Enabled");
+                Toast.makeText(MainActivity.this, mRefreshLayout.isEnablePullRefresh() ? "PullRefresh Enabled" : "PullRefresh Disabled", Toast.LENGTH_SHORT).show();
+                break;
+
+            case R.id.m_item_4:// 是否启用上拉刷新功能
+                mRefreshLayout.setEnableLoadMore(!mRefreshLayout.isEnableLoadMore());
+                item.setTitle(mRefreshLayout.isEnableLoadMore() ? "LoadMore Disabled" : "LoadMore Enabled");
+                Toast.makeText(MainActivity.this, mRefreshLayout.isEnableLoadMore() ? "LoadMore Enabled" : "LoadMore Disabled", Toast.LENGTH_SHORT).show();
+                break;
+
+            case R.id.m_item_5:// 自定义刷新头部(注意setHeadViewHeight一定要在setCustomHeadView之前，否则头部高度不正确)
+                mRefreshLayout.setHeadViewHeight((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 90, getResources().getDisplayMetrics()));
+                mRefreshLayout.setCustomHeadView(new KRefreshHeadView(this));
                 mRefreshLayout.startRefreshWithCallBack();
                 break;
         }
@@ -81,6 +99,23 @@ public class MainActivity extends AppCompatActivity implements KRefreshLayout.KO
                 });
             }
         };
-        timer.schedule(task, 5000);
+        timer.schedule(task, 4000);
+    }
+
+    @Override
+    public void onLoadMore() {
+        Timer timer = new Timer(true);
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                MainActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mRefreshLayout.finishLoadMore();
+                    }
+                });
+            }
+        };
+        timer.schedule(task, 4000);
     }
 }

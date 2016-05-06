@@ -8,9 +8,9 @@ import android.support.v4.view.ViewPropertyAnimatorListenerAdapter;
 import android.support.v4.view.ViewPropertyAnimatorUpdateListener;
 import android.util.AttributeSet;
 import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.AbsListView;
 import android.widget.FrameLayout;
@@ -32,12 +32,17 @@ public class KRefreshLayout extends FrameLayout {
     private DecelerateInterpolator decelerateInterpolator;
     private View mContentView;// 内容视图（ListView、GridView等）
     private int mHeadHeight;// 刷新头部视图高度
+    private int mFootHeight;// 刷新尾部视图高度
     private float mTouchY;// 下拉时，手指按压记录的第一个Y坐标值
     private float mCurrentY;// 下拉时，手指移动时不断记录的Y坐标值
     private boolean isTouchEnd;// 触摸事件是否结束
     private boolean isOverlay;// 头部视图是否被内容视图覆盖
     private boolean isAttached;// 是否已执行过onAttachedToWindow
+    private boolean enablePullRefresh;// 是否启用下拉刷新
+    private boolean enableLoadMore;// 是否启用加载更多
+    private boolean isLoadMore;// 区别是下拉还是上拉
     private KRefreshBaseHead mRefreshHeadView;// 头部视图
+    private KLoadMoreFoot mRefreshFootView;
     private KOnRefreshListener mOnRefreshListener;// 刷新回调
 
     public KRefreshLayout(Context context) {
@@ -62,11 +67,14 @@ public class KRefreshLayout extends FrameLayout {
             throw new RuntimeException("can only have one child widget");
         }
 
-        mHeadHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 90, getResources().getDisplayMetrics());
+        mHeadHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 70, getResources().getDisplayMetrics());
+        mFootHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 60, getResources().getDisplayMetrics());
         decelerateInterpolator = new DecelerateInterpolator(10);
         isRefreshing = false;
         isTouchEnd = true;
         isOverlay = true;
+        enablePullRefresh = true;
+        enableLoadMore = false;
         state = DONE;
     }
 
@@ -82,10 +90,13 @@ public class KRefreshLayout extends FrameLayout {
 
         // 初始化默认头部视图
         if (mRefreshHeadView == null) {
-            mRefreshHeadView = new KRefreshHeadView(getContext());
+            mRefreshHeadView = new RefreshNormalHead(getContext());
         }
         // 添加头部视图
         addRefreshHeader();
+
+        // 添加加载更多视图
+        addRefreshFooter();
 
         isAttached = true;
     }
@@ -101,10 +112,25 @@ public class KRefreshLayout extends FrameLayout {
         // 如果已经添加过头部视图，则先删除
         if (getChildCount() > 1) removeViewAt(0);
         // 重新添加新头部视图
-        addView(mRefreshHeadView, 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, mHeadHeight));
+        addView(mRefreshHeadView, 0, new LayoutParams(LayoutParams.MATCH_PARENT, mHeadHeight));
         // 判断是否是覆盖模式
         if (!isOverlay) {
             ViewCompat.setTranslationY(mRefreshHeadView, -mHeadHeight);
+        }
+    }
+
+    /**
+     * 添加刷新尾部视图
+     */
+    private void addRefreshFooter() {
+        mRefreshFootView = new KLoadMoreFoot(getContext());
+        LayoutParams lp = new LayoutParams(LayoutParams.MATCH_PARENT, mFootHeight);
+        lp.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
+        addView(mRefreshFootView, 1, lp);
+
+        // 判断是否是覆盖模式
+        if (!isOverlay) {
+            ViewCompat.setTranslationY(mRefreshFootView, mFootHeight);
         }
     }
 
@@ -118,8 +144,12 @@ public class KRefreshLayout extends FrameLayout {
 
             case MotionEvent.ACTION_MOVE:
                 float dy = ev.getY() - mTouchY;
-                if (dy > 0 && !canChildScrollUp() && !isRefreshing && state != REFRESHING && isTouchEnd) {// 如果是下拉并且内容视图已经到顶部且不是正在刷新状态，则拦截事件
+                if (dy > 0 && !canChildScrollUp() && !isRefreshing && state != REFRESHING && isTouchEnd && enablePullRefresh) {// 如果是下拉并且内容视图已经到顶部且不是正在刷新状态，则拦截事件
                     //Log.d(TAG, "ACTION_MOVE 已拦截");
+                    isLoadMore = false;
+                    return true;
+                } else if (dy < 0 && !canChildScrollDown() && !isRefreshing && state != REFRESHING && isTouchEnd && enableLoadMore) {// 上拉加载更多
+                    isLoadMore = true;
                     return true;
                 }
                 break;
@@ -133,44 +163,86 @@ public class KRefreshLayout extends FrameLayout {
             return super.onTouchEvent(event);
         }
 
-        mCurrentY = event.getY();
-        float dy = mCurrentY - mTouchY;// 计算下拉了多少距离
-        dy = Math.min(mHeadHeight * 3, dy);// 最大可以下来头部视图高度的3倍距离
-        dy = Math.max(0, dy);// 排除负数情况
-        float offsetY = getOffsetY(dy);
+        if (!isLoadMore) {// 下拉刷新
+            mCurrentY = event.getY();
+            float dy = mCurrentY - mTouchY;// 计算下拉了多少距离
+            dy = Math.min(mHeadHeight * 3, dy);// 最大可以下来头部视图高度的3倍距离
+            dy = Math.max(0, dy);// 排除负数情况
+            float offsetY = getHeadOffsetY(dy);
 
-        switch (event.getAction()) {
-            case MotionEvent.ACTION_MOVE:
-                if (mContentView != null) {
-                    isTouchEnd = false;
-                    //Log.d(TAG, "ACTION_MOVE --> dy:" + dy + " offsetY:" + offsetY);
-                    if (offsetY < mHeadHeight) {// 切换为下拉刷新状态
-                        changeHeaderByState(PULL_TO_REFRESH, offsetY);
-                    } else {// 切换为释放刷新状态，且只调用一次
-                        if (state != RELEASE_TO_REFRESH) changeHeaderByState(RELEASE_TO_REFRESH, offsetY);
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_MOVE:
+                    if (mContentView != null) {
+                        isTouchEnd = false;
+                        //Log.d(TAG, "ACTION_MOVE --> dy:" + dy + " offsetY:" + offsetY);
+                        if (offsetY < mHeadHeight) {// 切换为下拉刷新状态
+                            changeHeaderByState(PULL_TO_REFRESH, offsetY);
+                        } else {// 切换为释放刷新状态，且只调用一次
+                            if (state != RELEASE_TO_REFRESH) changeHeaderByState(RELEASE_TO_REFRESH, offsetY);
+                        }
+                        // 移动内容视图坐标
+                        ViewCompat.setTranslationY(mContentView, offsetY);
+                        // 移动头部视图
+                        if (!isOverlay) {
+                            ViewCompat.setTranslationY(mRefreshHeadView, -mRefreshHeadView.getLayoutParams().height + offsetY);
+                        }
                     }
-                    // 移动内容视图坐标
-                    ViewCompat.setTranslationY(mContentView, offsetY);
-                    // 移动头部视图
-                    if (!isOverlay) {
-                        ViewCompat.setTranslationY(mRefreshHeadView, -mRefreshHeadView.getLayoutParams().height + offsetY);
-                    }
-                }
-                return true;
+                    return true;
 
-            case MotionEvent.ACTION_UP:
-            case MotionEvent.ACTION_CANCEL:
-                //Log.d(TAG, "ACTION_UP --> dy:" + dy + " offsetY:" + offsetY);
-                if (mContentView != null) {// 切换为刷新状态
-                    if (ViewCompat.getTranslationY(mContentView) >= mHeadHeight) {// 释放后进入刷新状态
-                        createAnimatorTranslationY(mContentView, mHeadHeight, mRefreshHeadView);
-                        changeHeaderByState(REFRESHING, offsetY);
-                    } else {// 结束刷新
-                        finishRefreshing();
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    //Log.d(TAG, "ACTION_UP --> dy:" + dy + " offsetY:" + offsetY);
+                    if (mContentView != null) {// 切换为刷新状态
+                        if (ViewCompat.getTranslationY(mContentView) >= mHeadHeight) {// 释放后进入刷新状态
+                            createAnimTransYForHead(mContentView, mHeadHeight, mRefreshHeadView);
+                            changeHeaderByState(REFRESHING, offsetY);
+                        } else {// 结束刷新
+                            finishRefreshing();
+                        }
+                        isTouchEnd = true;
                     }
-                    isTouchEnd = true;
-                }
-                return true;
+                    return true;
+            }
+        } else {// 上拉加载
+            mCurrentY = event.getY();
+            float dy = mTouchY - mCurrentY;// 计算上拉了多少距离
+            dy = Math.min(mFootHeight * 3, dy);// 最大可以下来头部视图高度的3倍距离
+            dy = Math.max(0, dy);// 排除负数情况
+            float offsetY = getFootOffsetY(dy);
+
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_MOVE:
+                    if (mContentView != null) {
+                        isTouchEnd = false;
+                        //Log.d(TAG, "ACTION_MOVE --> dy:" + dy + " offsetY:" + offsetY);
+                        if (offsetY < mFootHeight) {// 切换为下拉刷新状态
+                            changeFooterByState(PULL_TO_REFRESH, offsetY);
+                        } else {// 切换为释放刷新状态，且只调用一次
+                            if (state != RELEASE_TO_REFRESH) changeFooterByState(RELEASE_TO_REFRESH, offsetY);
+                        }
+                        // 移动内容视图坐标
+                        ViewCompat.setTranslationY(mContentView, -offsetY);
+                        // 移动头部视图
+                        if (!isOverlay) {
+                            ViewCompat.setTranslationY(mRefreshFootView, mRefreshFootView.getLayoutParams().height - offsetY);
+                        }
+                    }
+                    return true;
+
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    //Log.d(TAG, "ACTION_UP --> dy:" + dy + " offsetY:" + offsetY);
+                    if (mContentView != null) {// 切换为刷新状态
+                        if (ViewCompat.getTranslationY(mContentView) <= -mFootHeight) {// 释放后进入刷新状态
+                            createAnimTransYForFoot(mContentView, -mFootHeight, mRefreshFootView);
+                            changeFooterByState(REFRESHING, offsetY);
+                        } else {// 结束加载更多
+                            finishLoadingMore();
+                        }
+                        isTouchEnd = true;
+                    }
+                    return true;
+            }
         }
 
         return super.onTouchEvent(event);
@@ -214,10 +286,48 @@ public class KRefreshLayout extends FrameLayout {
         }
     }
 
+    /**
+     * 根据状态改变footerView的动画和文字显示
+     * @param state
+     * @param offsetY
+     */
+    private void changeFooterByState(int state, float offsetY) {
+        if (mRefreshFootView == null) return;
+
+        switch (state) {
+            case DONE:// 如果的隐藏的状态
+                this.state = DONE;
+                isRefreshing = false;
+                mRefreshFootView.refreshCompleteAction();
+                break;
+
+            case PULL_TO_REFRESH:// 当前状态为下拉刷新
+                this.state = PULL_TO_REFRESH;
+                mRefreshFootView.pullAction(offsetY);
+                break;
+
+            case RELEASE_TO_REFRESH:// 当前状态为放开刷新
+                this.state = RELEASE_TO_REFRESH;
+                mRefreshFootView.releaseRefreshAction();
+                break;
+
+            case REFRESHING:// 当前状态为正在刷新
+                this.state = REFRESHING;
+                isRefreshing = true;
+                mRefreshFootView.refreshAction();
+                // 刷新回调
+                if (mOnRefreshListener != null) mOnRefreshListener.onLoadMore();
+                break;
+
+            default:
+                break;
+        }
+    }
+
     private void startRefreshing() {
-        if (isRefreshing) return;
+        if (isRefreshing || !enablePullRefresh) return;
         if (mContentView != null) {
-            createAnimatorTranslationY(mContentView, mHeadHeight, mRefreshHeadView);
+            createAnimTransYForHead(mContentView, mHeadHeight, mRefreshHeadView);
             changeHeaderByState(REFRESHING, 0);
         }
     }
@@ -226,7 +336,7 @@ public class KRefreshLayout extends FrameLayout {
      * 开始刷新，该方法回调onRefresh
      */
     public void startRefreshWithCallBack() {
-        if (isRefreshing) return;
+        if (isRefreshing || !enablePullRefresh) return;
         this.post(new Runnable() {
             @Override
             public void run() {
@@ -241,7 +351,7 @@ public class KRefreshLayout extends FrameLayout {
      * @param delayMillis
      */
     public void startRefreshWithCallBack(long delayMillis) {
-        if (isRefreshing) return;
+        if (isRefreshing || !enablePullRefresh) return;
         this.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -250,9 +360,12 @@ public class KRefreshLayout extends FrameLayout {
         }, delayMillis < 0 ? 0 : delayMillis);
     }
 
+    /**
+     * 结束刷新
+     */
     private void finishRefreshing() {
         if (mContentView != null) {
-            createAnimatorTranslationY(mContentView, 0, mRefreshHeadView);
+            createAnimTransYForHead(mContentView, 0, mRefreshHeadView);
         }
     }
 
@@ -264,6 +377,27 @@ public class KRefreshLayout extends FrameLayout {
             @Override
             public void run() {
                 finishRefreshing();
+            }
+        });
+    }
+
+    /**
+     * 结束加载更多
+     */
+    private void finishLoadingMore() {
+        if (mContentView != null) {
+            createAnimTransYForFoot(mContentView, 0, mRefreshFootView);
+        }
+    }
+
+    /**
+     * 结束加载更多
+     */
+    public void finishLoadMore() {
+        this.post(new Runnable() {
+            @Override
+            public void run() {
+                finishLoadingMore();
             }
         });
     }
@@ -317,13 +451,13 @@ public class KRefreshLayout extends FrameLayout {
     }
 
     /**
-     * 创建一个移动动画
+     * 创建一个移动动画(下拉时)
      *
      * @param targetView
      * @param valueY
      * @param headLayout
      */
-    private void createAnimatorTranslationY(final View targetView, final float valueY, final FrameLayout headLayout) {
+    private void createAnimTransYForHead(final View targetView, final float valueY, final FrameLayout headLayout) {
         ViewPropertyAnimatorCompat viewPropertyAnimatorCompat = ViewCompat.animate(targetView);
         viewPropertyAnimatorCompat.setDuration(350);
         viewPropertyAnimatorCompat.setInterpolator(new DecelerateInterpolator());
@@ -334,7 +468,7 @@ public class KRefreshLayout extends FrameLayout {
             public void onAnimationUpdate(View view) {
                 /*if (headOpListener == null) return;
                 float transY = ViewCompat.getTranslationY(targetView);
-                float offsetY = getOffsetY(Math.max(0, transY));
+                float offsetY = getHeadOffsetY(Math.max(0, transY));
                 headOpListener.pullAction(offsetY);*/
                 // 移动头部视图
                 if (headLayout != null && !isOverlay) {
@@ -353,8 +487,44 @@ public class KRefreshLayout extends FrameLayout {
         });
     }
 
-    private float getOffsetY(float y) {
+    /**
+     * 创建一个移动动画(上拉拉时)
+     * @param targetView
+     * @param valueY
+     * @param footLayout
+     */
+    private void createAnimTransYForFoot(final View targetView, final float valueY, final FrameLayout footLayout) {
+        ViewPropertyAnimatorCompat viewPropertyAnimatorCompat = ViewCompat.animate(targetView);
+        viewPropertyAnimatorCompat.setDuration(350);
+        viewPropertyAnimatorCompat.setInterpolator(new DecelerateInterpolator());
+        viewPropertyAnimatorCompat.translationY(valueY);
+        viewPropertyAnimatorCompat.start();
+        viewPropertyAnimatorCompat.setUpdateListener(new ViewPropertyAnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(View view) {
+                // 移动底部视图
+                if (footLayout != null && !isOverlay) {
+                    float transY = ViewCompat.getTranslationY(targetView);
+                    ViewCompat.setTranslationY(footLayout, mRefreshFootView.getLayoutParams().height + transY);
+                }
+            }
+        });
+        viewPropertyAnimatorCompat.setListener(new ViewPropertyAnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(View view) {
+                if (valueY == 0) {// 如果目标Y坐标为0，则置为隐藏状态
+                    changeFooterByState(DONE, valueY);
+                }
+            }
+        });
+    }
+
+    private float getHeadOffsetY(float y) {
         return decelerateInterpolator.getInterpolation(y / mHeadHeight / 3) * y / 2;
+    }
+
+    private float getFootOffsetY(float y) {
+        return decelerateInterpolator.getInterpolation(y / mFootHeight / 3) * y / 3;
     }
 
     public boolean isOverlay() {
@@ -364,11 +534,30 @@ public class KRefreshLayout extends FrameLayout {
     public void setOverlay(boolean overlay) {
         if (isRefreshing) return;
         isOverlay = overlay;
-        if (isOverlay) ViewCompat.setTranslationY(mRefreshHeadView, 0);
+        if (isOverlay) {
+            ViewCompat.setTranslationY(mRefreshHeadView, 0);
+            ViewCompat.setTranslationY(mRefreshFootView, 0);
+        }
     }
 
-   public boolean isRefreshing() {
+    public boolean isRefreshing() {
         return isRefreshing;
+    }
+
+    public boolean isEnablePullRefresh() {
+        return enablePullRefresh;
+    }
+
+    public void setEnablePullRefresh(boolean enablePullRefresh) {
+        this.enablePullRefresh = enablePullRefresh;
+    }
+
+    public boolean isEnableLoadMore() {
+        return enableLoadMore;
+    }
+
+    public void setEnableLoadMore(boolean enableLoadMore) {
+        this.enableLoadMore = enableLoadMore;
     }
 
     /**
@@ -390,6 +579,14 @@ public class KRefreshLayout extends FrameLayout {
      */
     public void setHeadViewHeight(int headHeight) {
         mHeadHeight = headHeight;
+    }
+
+    /**
+     * 设置底部加载更多视图高度
+     * @param footHeight
+     */
+    public void setFootViewHeight(int footHeight) {
+        mFootHeight = footHeight;
     }
 
     /**
@@ -415,5 +612,6 @@ public class KRefreshLayout extends FrameLayout {
 
     public interface KOnRefreshListener {
         void onRefresh();
+        void onLoadMore();
     }
 }

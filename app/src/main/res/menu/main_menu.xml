@@ -8,4 +8,16 @@
     <item
         android:id="@+id/m_item_2"
         android:title="Follow Model"/>
+
+    <item
+        android:id="@+id/m_item_3"
+        android:title="PullRefresh Disabled"/>
+
+    <item
+        android:id="@+id/m_item_4"
+        android:title="LoadMore Enabled"/>
+
+    <item
+        android:id="@+id/m_item_5"
+        android:title="Custom HeaderView"/>
 </menu>
