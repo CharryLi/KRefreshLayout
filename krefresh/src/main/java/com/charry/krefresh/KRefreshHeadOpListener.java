@@ -1,4 +1,4 @@
-package com.charry.krefreshlayout.widget;
+package com.charry.krefresh;
 
 /**
  * 下拉刷新操作过程中事件回调

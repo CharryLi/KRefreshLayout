@@ -1,4 +1,4 @@
-package com.charry.krefreshlayout.widget;
+package com.charry.krefresh;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;

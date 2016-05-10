@@ -1,4 +1,4 @@
-package com.charry.krefreshlayout;
+package com.charry.krefreshsample;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -10,8 +10,8 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import com.charry.krefreshlayout.widget.CustomRefreshHeadView;
-import com.charry.krefreshlayout.widget.KRefreshLayout;
+import com.charry.krefresh.KRefreshLayout;
+import com.charry.krefreshsample.widget.CustomRefreshHeadView;
 
 import java.util.ArrayList;
 import java.util.List;

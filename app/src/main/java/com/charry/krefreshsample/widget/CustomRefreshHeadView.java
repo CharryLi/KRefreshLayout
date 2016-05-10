@@ -1,4 +1,4 @@
-package com.charry.krefreshlayout.widget;
+package com.charry.krefreshsample.widget;
 
 import android.animation.ObjectAnimator;
 import android.content.Context;
@@ -12,7 +12,8 @@ import android.view.animation.DecelerateInterpolator;
 import android.view.animation.LinearInterpolator;
 import android.widget.ImageView;
 
-import com.charry.krefreshlayout.R;
+import com.charry.krefresh.KBaseRefreshHead;
+import com.charry.krefreshsample.R;
 
 /**
  * 下拉刷新头部视图
