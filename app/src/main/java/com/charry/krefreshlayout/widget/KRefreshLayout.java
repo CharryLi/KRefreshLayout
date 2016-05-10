@@ -1,11 +1,11 @@
 package com.charry.krefreshlayout.widget;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.os.Build;
 import android.support.v4.view.ViewCompat;
-import android.support.v4.view.ViewPropertyAnimatorCompat;
-import android.support.v4.view.ViewPropertyAnimatorListenerAdapter;
-import android.support.v4.view.ViewPropertyAnimatorUpdateListener;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -324,6 +324,9 @@ public class KRefreshLayout extends FrameLayout {
         }
     }
 
+    /**
+     * 开始刷新
+     */
     private void startRefreshing() {
         if (isRefreshing || !enablePullRefresh) return;
         if (mContentView != null) {
@@ -458,33 +461,40 @@ public class KRefreshLayout extends FrameLayout {
      * @param headLayout
      */
     private void createAnimTransYForHead(final View targetView, final float valueY, final FrameLayout headLayout) {
-        ViewPropertyAnimatorCompat viewPropertyAnimatorCompat = ViewCompat.animate(targetView);
-        viewPropertyAnimatorCompat.setDuration(350);
-        viewPropertyAnimatorCompat.setInterpolator(new DecelerateInterpolator());
-        viewPropertyAnimatorCompat.translationY(valueY);
-        viewPropertyAnimatorCompat.start();
-        viewPropertyAnimatorCompat.setUpdateListener(new ViewPropertyAnimatorUpdateListener() {
+        //Log.d(TAG, "getTranslationY:" + targetView.getTranslationY() + " valueY:" + valueY);
+        ValueAnimator valueAnimator = ValueAnimator.ofFloat(targetView.getTranslationY(), valueY);
+        valueAnimator.setDuration(350);
+        valueAnimator.setInterpolator(new DecelerateInterpolator());
+        valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
-            public void onAnimationUpdate(View view) {
+            public void onAnimationUpdate(ValueAnimator animation) {
                 /*if (headOpListener == null) return;
                 float transY = ViewCompat.getTranslationY(targetView);
                 float offsetY = getHeadOffsetY(Math.max(0, transY));
                 headOpListener.pullAction(offsetY);*/
+
+                float transY = (float) animation.getAnimatedValue();
+                //Log.d(TAG, "update value:" + transY);
+                // 移动内容视图
+                ViewCompat.setTranslationY(targetView, transY);
                 // 移动头部视图
                 if (headLayout != null && !isOverlay) {
-                    float transY = ViewCompat.getTranslationY(targetView);
                     ViewCompat.setTranslationY(headLayout, -headLayout.getLayoutParams().height + transY);
                 }
+                // 设置内容视图底部padding-解决刷新状态下内容视图无法滚动到底部问题
+                targetView.setPadding(0, 0, 0, (int) Math.abs(transY));
             }
         });
-        viewPropertyAnimatorCompat.setListener(new ViewPropertyAnimatorListenerAdapter() {
+        valueAnimator.addListener(new AnimatorListenerAdapter() {
             @Override
-            public void onAnimationEnd(View view) {
+            public void onAnimationEnd(Animator animation) {
+                //Log.d(TAG, "onAnimationEnd");
                 if (valueY == 0) {// 如果目标Y坐标为0，则置为隐藏状态
                     changeHeaderByState(DONE, valueY);
                 }
             }
         });
+        valueAnimator.start();
     }
 
     /**
@@ -494,29 +504,35 @@ public class KRefreshLayout extends FrameLayout {
      * @param footLayout
      */
     private void createAnimTransYForFoot(final View targetView, final float valueY, final FrameLayout footLayout) {
-        ViewPropertyAnimatorCompat viewPropertyAnimatorCompat = ViewCompat.animate(targetView);
-        viewPropertyAnimatorCompat.setDuration(350);
-        viewPropertyAnimatorCompat.setInterpolator(new DecelerateInterpolator());
-        viewPropertyAnimatorCompat.translationY(valueY);
-        viewPropertyAnimatorCompat.start();
-        viewPropertyAnimatorCompat.setUpdateListener(new ViewPropertyAnimatorUpdateListener() {
+        //Log.d(TAG, "getTranslationY:" + targetView.getTranslationY() + " valueY:" + valueY);
+        ValueAnimator valueAnimator = ValueAnimator.ofFloat(targetView.getTranslationY(), valueY);
+        valueAnimator.setDuration(350);
+        valueAnimator.setInterpolator(new DecelerateInterpolator());
+        valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
-            public void onAnimationUpdate(View view) {
-                // 移动底部视图
+            public void onAnimationUpdate(ValueAnimator animation) {
+                float transY = (float) animation.getAnimatedValue();
+                //Log.d(TAG, "update value:" + transY);
+                // 移动内容视图
+                ViewCompat.setTranslationY(targetView, transY);
+                // 移动头部视图
                 if (footLayout != null && !isOverlay) {
-                    float transY = ViewCompat.getTranslationY(targetView);
                     ViewCompat.setTranslationY(footLayout, mRefreshFootView.getLayoutParams().height + transY);
                 }
+                // 设置内容视图头部padding-解决刷新状态下内容视图无法滚动到顶部问题
+                targetView.setPadding(0, (int) Math.abs(transY), 0, 0);
             }
         });
-        viewPropertyAnimatorCompat.setListener(new ViewPropertyAnimatorListenerAdapter() {
+        valueAnimator.addListener(new AnimatorListenerAdapter() {
             @Override
-            public void onAnimationEnd(View view) {
+            public void onAnimationEnd(Animator animation) {
+                //Log.d(TAG, "onAnimationEnd");
                 if (valueY == 0) {// 如果目标Y坐标为0，则置为隐藏状态
                     changeFooterByState(DONE, valueY);
                 }
             }
         });
+        valueAnimator.start();
     }
 
     private float getHeadOffsetY(float y) {
