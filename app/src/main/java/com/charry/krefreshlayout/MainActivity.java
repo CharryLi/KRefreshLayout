@@ -22,6 +22,8 @@ public class MainActivity extends AppCompatActivity implements KRefreshLayout.KO
 
     private ListView mListView;
     private KRefreshLayout mRefreshLayout;
+    private List<String> mDatas;
+    private ArrayAdapter<String> mAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,15 +34,19 @@ public class MainActivity extends AppCompatActivity implements KRefreshLayout.KO
         mRefreshLayout.setOnRefreshListener(this);
         mListView = (ListView) findViewById(R.id.listview);
 
-        List<String> datas = new ArrayList<>();
-        for (int i = 0; i < 20; i++) {
-            datas.add("item" + i);
-        }
+        mDatas = new ArrayList<>();
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, datas);
-        mListView.setAdapter(adapter);
+        mAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, mDatas);
+        mListView.setAdapter(mAdapter);
 
         mRefreshLayout.startRefreshWithCallBack(100);
+    }
+
+    private void initDatas() {
+        mDatas.clear();
+        for (int i = 0; i < 20; i++) {
+            mDatas.add("item" + i);
+        }
     }
 
     @Override
@@ -95,6 +101,8 @@ public class MainActivity extends AppCompatActivity implements KRefreshLayout.KO
                     @Override
                     public void run() {
                         mRefreshLayout.finishRefresh();
+                        initDatas();
+                        mAdapter.notifyDataSetChanged();
                     }
                 });
             }
@@ -112,6 +120,8 @@ public class MainActivity extends AppCompatActivity implements KRefreshLayout.KO
                     @Override
                     public void run() {
                         mRefreshLayout.finishLoadMore();
+                        mDatas.add("more data");
+                        mAdapter.notifyDataSetChanged();
                     }
                 });
             }
