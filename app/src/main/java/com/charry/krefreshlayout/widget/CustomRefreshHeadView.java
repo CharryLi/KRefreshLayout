@@ -18,22 +18,22 @@ import com.charry.krefreshlayout.R;
  * 下拉刷新头部视图
  * Created by CharryLi on 16/5/3.
  */
-public class KRefreshHeadView extends KRefreshBaseHead {
+public class CustomRefreshHeadView extends KBaseRefreshHead {
 
     private ImageView sunImgView, cloudImgView1, cloudImgView2, balloonImgView, singleBallImgView;
     private Animation sunAnimation;// 太阳动画
     private Animation backAnimation1, backAnimation2;// 两张背景图动画
     private ObjectAnimator ballObjAnim, singleBallObjAnim;
 
-    public KRefreshHeadView(Context context) {
+    public CustomRefreshHeadView(Context context) {
         this(context, null);
     }
 
-    public KRefreshHeadView(Context context, AttributeSet attrs) {
+    public CustomRefreshHeadView(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    public KRefreshHeadView(Context context, AttributeSet attrs, int defStyleAttr) {
+    public CustomRefreshHeadView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         init();
     }

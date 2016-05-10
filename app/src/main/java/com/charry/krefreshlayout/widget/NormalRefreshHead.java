@@ -11,19 +11,19 @@ import android.widget.TextView;
  * 仅文字头部
  * Created by CharryLi on 16/5/6.
  */
-public class RefreshNormalHead extends KRefreshBaseHead {
+public class NormalRefreshHead extends KBaseRefreshHead {
 
     private TextView mTextView;
 
-    public RefreshNormalHead(Context context) {
+    public NormalRefreshHead(Context context) {
         this(context, null);
     }
 
-    public RefreshNormalHead(Context context, AttributeSet attrs) {
+    public NormalRefreshHead(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    public RefreshNormalHead(Context context, AttributeSet attrs, int defStyleAttr) {
+    public NormalRefreshHead(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
 
         mTextView = new TextView(getContext());

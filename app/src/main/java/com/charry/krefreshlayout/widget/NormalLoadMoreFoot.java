@@ -5,25 +5,24 @@ import android.graphics.Color;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.Gravity;
-import android.widget.FrameLayout;
 import android.widget.TextView;
 
 /**
- * Created by CharryLi on 16/5/6.
+ * Created by CharryLi on 16/5/10.
  */
-public class KLoadMoreFoot extends FrameLayout implements KRefreshHeadOpLinstener {
+public class NormalLoadMoreFoot extends KBaseLoadMoreFoot {
 
     private TextView mTextView;
 
-    public KLoadMoreFoot(Context context) {
+    public NormalLoadMoreFoot(Context context) {
         this(context, null);
     }
 
-    public KLoadMoreFoot(Context context, AttributeSet attrs) {
+    public NormalLoadMoreFoot(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    public KLoadMoreFoot(Context context, AttributeSet attrs, int defStyleAttr) {
+    public NormalLoadMoreFoot(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
 
         mTextView = new TextView(getContext());

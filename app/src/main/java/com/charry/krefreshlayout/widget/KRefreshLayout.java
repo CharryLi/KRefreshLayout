@@ -41,8 +41,8 @@ public class KRefreshLayout extends FrameLayout {
     private boolean enablePullRefresh;// 是否启用下拉刷新
     private boolean enableLoadMore;// 是否启用加载更多
     private boolean isLoadMore;// 区别是下拉还是上拉
-    private KRefreshBaseHead mRefreshHeadView;// 头部视图
-    private KLoadMoreFoot mRefreshFootView;
+    private KBaseRefreshHead mRefreshHeadView;// 头部视图
+    private KBaseLoadMoreFoot mRefreshFootView;
     private KOnRefreshListener mOnRefreshListener;// 刷新回调
 
     public KRefreshLayout(Context context) {
@@ -90,7 +90,7 @@ public class KRefreshLayout extends FrameLayout {
 
         // 初始化默认头部视图
         if (mRefreshHeadView == null) {
-            mRefreshHeadView = new RefreshNormalHead(getContext());
+            mRefreshHeadView = new NormalRefreshHead(getContext());
         }
         // 添加头部视图
         addRefreshHeader();
@@ -123,7 +123,7 @@ public class KRefreshLayout extends FrameLayout {
      * 添加刷新尾部视图
      */
     private void addRefreshFooter() {
-        mRefreshFootView = new KLoadMoreFoot(getContext());
+        mRefreshFootView = new NormalLoadMoreFoot(getContext());
         LayoutParams lp = new LayoutParams(LayoutParams.MATCH_PARENT, mFootHeight);
         lp.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
         addView(mRefreshFootView, 1, lp);
@@ -580,7 +580,7 @@ public class KRefreshLayout extends FrameLayout {
      * 设置自定义头部视图
      * @param headView
      */
-    public void setCustomHeadView(KRefreshBaseHead headView) {
+    public void setCustomHeadView(KBaseRefreshHead headView) {
         if (headView == null || isRefreshing) return;
         this.mRefreshHeadView = headView;
         // 如果已经Attacted过，则手动执行切换头部

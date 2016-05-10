@@ -8,17 +8,17 @@ import android.widget.FrameLayout;
  * 头部视图基类，实现自定义头部视图需继承此基类
  * Created by CharryLi on 16/5/6.
  */
-public class KRefreshBaseHead extends FrameLayout implements KRefreshHeadOpLinstener {
+public class KBaseRefreshHead extends FrameLayout implements KRefreshHeadOpListener {
 
-    public KRefreshBaseHead(Context context) {
+    public KBaseRefreshHead(Context context) {
         this(context, null);
     }
 
-    public KRefreshBaseHead(Context context, AttributeSet attrs) {
+    public KBaseRefreshHead(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    public KRefreshBaseHead(Context context, AttributeSet attrs, int defStyleAttr) {
+    public KBaseRefreshHead(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
     }
 

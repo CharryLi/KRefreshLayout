@@ -10,7 +10,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import com.charry.krefreshlayout.widget.KRefreshHeadView;
+import com.charry.krefreshlayout.widget.CustomRefreshHeadView;
 import com.charry.krefreshlayout.widget.KRefreshLayout;
 
 import java.util.ArrayList;
@@ -78,7 +78,7 @@ public class MainActivity extends AppCompatActivity implements KRefreshLayout.KO
 
             case R.id.m_item_5:// 自定义刷新头部(注意setHeadViewHeight一定要在setCustomHeadView之前，否则头部高度不正确)
                 mRefreshLayout.setHeadViewHeight((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 90, getResources().getDisplayMetrics()));
-                mRefreshLayout.setCustomHeadView(new KRefreshHeadView(this));
+                mRefreshLayout.setCustomHeadView(new CustomRefreshHeadView(this));
                 mRefreshLayout.startRefreshWithCallBack();
                 break;
         }
