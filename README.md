@@ -1,5 +1,7 @@
 # KRefreshLayout  
-继承自FrameLayout的下拉和上拉刷新   
+继承自FrameLayout的下拉和上拉刷新     
+![](https://github.com/CharryLi/KRefreshLayout/blob/master/gif/pullrefresh01.gif?raw=true)  
+![](https://github.com/CharryLi/KRefreshLayout/blob/master/gif/loadmore01.gif?raw=true)
 
 ##如何使用
 Gradle  
