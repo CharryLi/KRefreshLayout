@@ -1,9 +1,8 @@
 # KRefreshLayout  
 继承自FrameLayout的下拉和上拉刷新   
 
----
 ##如何使用
-gradle  
+Gradle  
 `compile 'com.charry.krefresh:krefresh:0.1.1'`
   
   
@@ -19,24 +18,24 @@ XML中
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@android:color/white"/>
-    </com.charry.krefresh.KRefreshLayout>
+</com.charry.krefresh.KRefreshLayout>
 ```  
   
 代码中  
 ```java  
-  KRefreshLayout mRefreshLayout = (KRefreshLayout) findViewById(R.id.refreshlayout);
-        mRefreshLayout.setOnRefreshListener(new KRefreshLayout.KOnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                Toast.makeText(MainActivity.this, "刷新回调被调用了", Toast.LENGTH_SHORT).show();
-            }
-        });
-        mRefreshLayout.setOnLoadMoreListener(new KRefreshLayout.KOnLoadMoreListener() {
-            @Override
-            public void onLoadMore() {
-                Toast.makeText(MainActivity.this, "上拉回调被调用了", Toast.LENGTH_SHORT).show();
-            }
-        });
+KRefreshLayout mRefreshLayout = (KRefreshLayout) findViewById(R.id.refreshlayout);
+mRefreshLayout.setOnRefreshListener(new KRefreshLayout.KOnRefreshListener() {
+    @Override
+    public void onRefresh() {
+        Toast.makeText(MainActivity.this, "刷新回调被调用了", Toast.LENGTH_SHORT).show();
+    }
+});
+mRefreshLayout.setOnLoadMoreListener(new KRefreshLayout.KOnLoadMoreListener() {
+    @Override
+    public void onLoadMore() {
+        Toast.makeText(MainActivity.this, "上拉回调被调用了", Toast.LENGTH_SHORT).show();
+    }
+});
 ```  
   
 自动刷新  
