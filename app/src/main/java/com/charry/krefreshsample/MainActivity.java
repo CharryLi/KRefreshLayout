@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class MainActivity extends AppCompatActivity implements KRefreshLayout.KOnRefreshListener {
+public class MainActivity extends AppCompatActivity implements KRefreshLayout.KOnRefreshListener, KRefreshLayout.KOnLoadMoreListener {
 
     private ListView mListView;
     private KRefreshLayout mRefreshLayout;
@@ -34,6 +34,7 @@ public class MainActivity extends AppCompatActivity implements KRefreshLayout.KO
 
         mRefreshLayout = (KRefreshLayout) findViewById(R.id.refreshlayout);
         mRefreshLayout.setOnRefreshListener(this);
+        mRefreshLayout.setOnLoadMoreListener(this);
         mListView = (ListView) findViewById(R.id.listview);
 
         mDatas = new ArrayList<>();
@@ -91,7 +92,7 @@ public class MainActivity extends AppCompatActivity implements KRefreshLayout.KO
                 isAnimEnd = false;
                 break;
 
-            case R.id.m_item_6:
+            case R.id.m_item_6:// 自定义刷新头部动画执行完成后才收起头部，用于特殊场景
                 mRefreshLayout.setHeadViewHeight((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 90, getResources().getDisplayMetrics()));
                 mRefreshLayout.setCustomHeadView(new CustomEndAnimHeadView(this));
                 mRefreshLayout.startRefreshWithCallBack();

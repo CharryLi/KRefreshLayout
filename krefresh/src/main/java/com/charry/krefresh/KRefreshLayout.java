@@ -44,6 +44,7 @@ public class KRefreshLayout extends FrameLayout {
     private KBaseRefreshHead mRefreshHeadView;// 头部视图
     private KBaseLoadMoreFoot mRefreshFootView;
     private KOnRefreshListener mOnRefreshListener;// 刷新回调
+    private KOnLoadMoreListener mOnLoadMoreListener;// 加载更多回调
 
     public KRefreshLayout(Context context) {
         this(context, null);
@@ -163,7 +164,7 @@ public class KRefreshLayout extends FrameLayout {
             return super.onTouchEvent(event);
         }
 
-        if (!isLoadMore) {// 下拉刷新
+        if (!isLoadMore && !canChildScrollUp()) {// 下拉刷新
             mCurrentY = event.getY();
             float dy = mCurrentY - mTouchY;// 计算下拉了多少距离
             dy = Math.min(mHeadHeight * 3, dy);// 最大可以下来头部视图高度的3倍距离
@@ -203,7 +204,7 @@ public class KRefreshLayout extends FrameLayout {
                     }
                     return true;
             }
-        } else {// 上拉加载
+        } else if (isLoadMore && !canChildScrollDown()) {// 上拉加载
             mCurrentY = event.getY();
             float dy = mTouchY - mCurrentY;// 计算上拉了多少距离
             dy = Math.min(mFootHeight * 3, dy);// 最大可以下来头部视图高度的3倍距离
@@ -316,7 +317,7 @@ public class KRefreshLayout extends FrameLayout {
                 isRefreshing = true;
                 mRefreshFootView.refreshAction();
                 // 刷新回调
-                if (mOnRefreshListener != null) mOnRefreshListener.onLoadMore();
+                if (mOnLoadMoreListener != null) mOnLoadMoreListener.onLoadMore();
                 break;
 
             default:
@@ -330,6 +331,7 @@ public class KRefreshLayout extends FrameLayout {
     private void startRefreshing() {
         if (isRefreshing || !enablePullRefresh) return;
         if (mContentView != null) {
+            mRefreshHeadView.pullAction(0);
             createAnimTransYForHead(mContentView, mHeadHeight, mRefreshHeadView);
             changeHeaderByState(REFRESHING, 0);
         }
@@ -482,10 +484,9 @@ public class KRefreshLayout extends FrameLayout {
         valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
-                /*if (headOpListener == null) return;
-                float transY = ViewCompat.getTranslationY(targetView);
-                float offsetY = getHeadOffsetY(Math.max(0, transY));
-                headOpListener.pullAction(offsetY);*/
+                /*if (mRefreshHeadView == null) return;
+                float offsetY = getHeadOffsetY(Math.max(0, ViewCompat.getTranslationY(targetView)));
+                mRefreshHeadView.pullAction(offsetY);*/
 
                 float transY = (float) animation.getAnimatedValue();
                 //Log.d(TAG, "update value:" + transY);
@@ -629,6 +630,8 @@ public class KRefreshLayout extends FrameLayout {
             this.state = REFRESHING;
             isRefreshing = true;
             if (mRefreshHeadView != null) {
+                mRefreshHeadView.pullAction(0);
+                createAnimTransYForHead(mContentView, mHeadHeight, mRefreshHeadView);
                 mRefreshHeadView.refreshAction();
             }
         } else {// 结束刷新
@@ -642,6 +645,13 @@ public class KRefreshLayout extends FrameLayout {
 
     public interface KOnRefreshListener {
         void onRefresh();
+    }
+
+    public void setOnLoadMoreListener(KOnLoadMoreListener onLoadMoreListener) {
+        mOnLoadMoreListener = onLoadMoreListener;
+    }
+
+    public interface KOnLoadMoreListener {
         void onLoadMore();
     }
 }
