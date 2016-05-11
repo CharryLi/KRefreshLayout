@@ -1,5 +1,6 @@
 package com.charry.krefresh;
 
+import android.animation.Animator;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.widget.FrameLayout;
@@ -33,4 +34,9 @@ public class KBaseLoadMoreFoot extends FrameLayout implements KRefreshHeadOpList
 
     @Override
     public void refreshCompleteAction() {}
+
+    @Override
+    public void refreshEndAnimAction(long duration, Animator.AnimatorListener animatorListener) {
+
+    }
 }

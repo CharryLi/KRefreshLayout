@@ -41,7 +41,7 @@ public class CustomRefreshHeadView extends KBaseRefreshHead {
 
     private void init() {
         // 初始化视图控件
-        View xmlView = LayoutInflater.from(getContext()).inflate(R.layout.refresh_headerview, this, true);
+        View xmlView = LayoutInflater.from(getContext()).inflate(R.layout.cus_refresh_headview, this, true);
         sunImgView = (ImageView) xmlView.findViewById(R.id.iv_header_sun);
         cloudImgView1 = (ImageView) xmlView.findViewById(R.id.iv_header_cloud1);
         cloudImgView2 = (ImageView) xmlView.findViewById(R.id.iv_header_cloud2);
@@ -117,6 +117,6 @@ public class CustomRefreshHeadView extends KBaseRefreshHead {
         balloonImgView.clearAnimation();
         ballObjAnim.cancel();
         singleBallObjAnim.cancel();
-        this.animate().alpha(0.0f).setDuration(100).start();
+        this.animate().alpha(0.0f).setDuration(50).start();
     }
 }

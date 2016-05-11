@@ -11,6 +11,7 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.charry.krefresh.KRefreshLayout;
+import com.charry.krefreshsample.widget.CustomEndAnimHeadView;
 import com.charry.krefreshsample.widget.CustomRefreshHeadView;
 
 import java.util.ArrayList;
@@ -24,6 +25,7 @@ public class MainActivity extends AppCompatActivity implements KRefreshLayout.KO
     private KRefreshLayout mRefreshLayout;
     private List<String> mDatas;
     private ArrayAdapter<String> mAdapter;
+    private boolean isAnimEnd;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,6 +88,14 @@ public class MainActivity extends AppCompatActivity implements KRefreshLayout.KO
                 mRefreshLayout.setHeadViewHeight((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 90, getResources().getDisplayMetrics()));
                 mRefreshLayout.setCustomHeadView(new CustomRefreshHeadView(this));
                 mRefreshLayout.startRefreshWithCallBack();
+                isAnimEnd = false;
+                break;
+
+            case R.id.m_item_6:
+                mRefreshLayout.setHeadViewHeight((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 90, getResources().getDisplayMetrics()));
+                mRefreshLayout.setCustomHeadView(new CustomEndAnimHeadView(this));
+                mRefreshLayout.startRefreshWithCallBack();
+                isAnimEnd = true;
                 break;
         }
         return true;
@@ -100,7 +110,11 @@ public class MainActivity extends AppCompatActivity implements KRefreshLayout.KO
                 MainActivity.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        mRefreshLayout.finishRefresh();
+                        if (isAnimEnd) {
+                            mRefreshLayout.finishRefreshWithAnimEnd();
+                        } else {
+                            mRefreshLayout.finishRefresh();
+                        }
                         initDatas();
                         mAdapter.notifyDataSetChanged();
                     }

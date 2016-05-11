@@ -20,4 +20,8 @@
     <item
         android:id="@+id/m_item_5"
         android:title="Custom HeaderView"/>
+
+    <item
+        android:id="@+id/m_item_6"
+        android:title="Custom EndAnim HeaderView"/>
 </menu>

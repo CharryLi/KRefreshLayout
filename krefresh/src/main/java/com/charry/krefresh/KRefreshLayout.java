@@ -367,7 +367,7 @@ public class KRefreshLayout extends FrameLayout {
      * 结束刷新
      */
     private void finishRefreshing() {
-        if (mContentView != null) {
+        if (mContentView != null && mRefreshHeadView != null) {
             createAnimTransYForHead(mContentView, 0, mRefreshHeadView);
         }
     }
@@ -385,10 +385,24 @@ public class KRefreshLayout extends FrameLayout {
     }
 
     /**
+     * 结束刷新（此方法用于刷新结束时需执行特定动画后再结束刷新的特殊需求）
+     */
+    public void finishRefreshWithAnimEnd() {
+        if (mContentView != null && mRefreshHeadView != null) {
+            mRefreshHeadView.refreshEndAnimAction(400, new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    finishRefreshing();
+                }
+            });
+        }
+    }
+
+    /**
      * 结束加载更多
      */
     private void finishLoadingMore() {
-        if (mContentView != null) {
+        if (mContentView != null && mRefreshFootView != null) {
             createAnimTransYForFoot(mContentView, 0, mRefreshFootView);
         }
     }

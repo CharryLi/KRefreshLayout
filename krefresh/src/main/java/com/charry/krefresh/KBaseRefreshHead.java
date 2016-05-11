@@ -1,5 +1,6 @@
 package com.charry.krefresh;
 
+import android.animation.Animator;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.widget.FrameLayout;
@@ -9,6 +10,9 @@ import android.widget.FrameLayout;
  * Created by CharryLi on 16/5/6.
  */
 public class KBaseRefreshHead extends FrameLayout implements KRefreshHeadOpListener {
+
+    protected long endAnimDuration;
+    protected Animator.AnimatorListener endAnimtorListener;
 
     public KBaseRefreshHead(Context context) {
         this(context, null);
@@ -40,5 +44,11 @@ public class KBaseRefreshHead extends FrameLayout implements KRefreshHeadOpListe
     @Override
     public void refreshCompleteAction() {
 
+    }
+
+    @Override
+    public void refreshEndAnimAction(long duration, Animator.AnimatorListener animatorListener) {
+        this.endAnimDuration = duration;
+        this.endAnimtorListener = animatorListener;
     }
 }
