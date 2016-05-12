@@ -31,6 +31,7 @@ public class KRefreshLayout extends FrameLayout {
     private boolean isRefreshing;// 是否正在刷新
     private DecelerateInterpolator decelerateInterpolator;
     private View mContentView;// 内容视图（ListView、GridView等）
+
     private int mHeadHeight;// 刷新头部视图高度
     private int mFootHeight;// 刷新尾部视图高度
     private float mTouchY;// 下拉时，手指按压记录的第一个Y坐标值
@@ -41,6 +42,9 @@ public class KRefreshLayout extends FrameLayout {
     private boolean enablePullRefresh;// 是否启用下拉刷新
     private boolean enableLoadMore;// 是否启用加载更多
     private boolean isLoadMore;// 区别是下拉还是上拉
+    private int contentPaddingTop;// 内容视图paddingTop
+    private int contentPaddingBottom;// 内容视图paddingBottom
+
     private KBaseRefreshHead mRefreshHeadView;// 头部视图
     private KBaseLoadMoreFoot mRefreshFootView;
     private KOnRefreshListener mOnRefreshListener;// 刷新回调
@@ -88,6 +92,9 @@ public class KRefreshLayout extends FrameLayout {
         if (mContentView == null) {
             return;
         }
+
+        contentPaddingTop = mContentView.getPaddingTop();
+        contentPaddingBottom = mContentView.getPaddingBottom();
 
         // 初始化默认头部视图
         if (mRefreshHeadView == null) {
@@ -497,7 +504,7 @@ public class KRefreshLayout extends FrameLayout {
                     ViewCompat.setTranslationY(headLayout, -headLayout.getLayoutParams().height + transY);
                 }
                 // 设置内容视图底部padding-解决刷新状态下内容视图无法滚动到底部问题
-                targetView.setPadding(0, 0, 0, (int) Math.abs(transY) + targetView.getPaddingBottom());
+                targetView.setPadding(0, 0, 0, (int) Math.abs(transY) + contentPaddingBottom);
             }
         });
         valueAnimator.addListener(new AnimatorListenerAdapter() {
@@ -535,7 +542,7 @@ public class KRefreshLayout extends FrameLayout {
                     ViewCompat.setTranslationY(footLayout, mRefreshFootView.getLayoutParams().height + transY);
                 }
                 // 设置内容视图头部padding-解决刷新状态下内容视图无法滚动到顶部问题
-                targetView.setPadding(0, (int) Math.abs(transY) + targetView.getPaddingTop(), 0, 0);
+                targetView.setPadding(0, (int) Math.abs(transY) + contentPaddingTop, 0, 0);
             }
         });
         valueAnimator.addListener(new AnimatorListenerAdapter() {
