@@ -504,7 +504,7 @@ public class KRefreshLayout extends FrameLayout {
                     ViewCompat.setTranslationY(headLayout, -headLayout.getLayoutParams().height + transY);
                 }
                 // 设置内容视图底部padding-解决刷新状态下内容视图无法滚动到底部问题
-                targetView.setPadding(0, 0, 0, (int) Math.abs(transY) + contentPaddingBottom);
+                targetView.setPadding(targetView.getLeft(), contentPaddingTop, targetView.getRight(), (int) Math.abs(transY) + contentPaddingBottom);
             }
         });
         valueAnimator.addListener(new AnimatorListenerAdapter() {
@@ -542,7 +542,7 @@ public class KRefreshLayout extends FrameLayout {
                     ViewCompat.setTranslationY(footLayout, mRefreshFootView.getLayoutParams().height + transY);
                 }
                 // 设置内容视图头部padding-解决刷新状态下内容视图无法滚动到顶部问题
-                targetView.setPadding(0, (int) Math.abs(transY) + contentPaddingTop, 0, 0);
+                targetView.setPadding(targetView.getPaddingLeft(), (int) Math.abs(transY) + contentPaddingTop, targetView.getPaddingRight(), contentPaddingBottom);
             }
         });
         valueAnimator.addListener(new AnimatorListenerAdapter() {
